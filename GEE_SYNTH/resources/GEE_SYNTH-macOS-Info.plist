@@ -7,7 +7,7 @@
 	<key>CFBundleExecutable</key>
 	<string>GEE_SYNTH</string>
 	<key>CFBundleGetInfoString</key>
-	<string>GEE_SYNTH v1.0.0 Copyright 2020 Acme Inc</string>
+	<string>GEE_SYNTH v1.1.0 Copyright 2020 Acme Inc</string>
 	<key>CFBundleIconFile</key>
 	<string>GEE_SYNTH.icns</string>
 	<key>CFBundleIdentifier</key>
@@ -19,11 +19,11 @@
 	<key>CFBundlePackageType</key>
 	<string>BNDL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.0.0</string>
+	<string>1.1.0</string>
 	<key>CFBundleSignature</key>
 	<string>cAVm</string>
 	<key>CFBundleVersion</key>
-	<string>1.0.0</string>
+	<string>1.1.0</string>
 	<key>CSResourcesFileMapped</key>
 	<true/>
 	<key>LSApplicationCategoryType</key>
