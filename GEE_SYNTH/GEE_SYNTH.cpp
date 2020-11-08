@@ -13,6 +13,9 @@ GEE_SYNTH::GEE_SYNTH(const InstanceInfo& info)
   GetParam(kParamAmpDecay)->InitDouble("Decay", 10., 1., 1000., 0.1, "ms", IParam::kFlagsNone, "ADSR", IParam::ShapePowCurve(3.));
   GetParam(kParamAmpSustain)->InitDouble("Sustain", 50., 0., 100., 1, "%", IParam::kFlagsNone, "ADSR");
   GetParam(kParamAmpRelease)->InitDouble("Release", 10., 2., 1000., 0.1, "ms", IParam::kFlagsNone, "ADSR");
+  GetParam(kParamFilterCutoff)->InitFrequency("Filter Cutoff");
+  GetParam(kParamFilterResonance)->InitPercentage("Filter Resonance");
+
 
 #if IPLUG_DSP
   for (int i = 0; i < kNumVoices; i++) {
@@ -38,7 +41,7 @@ GEE_SYNTH::GEE_SYNTH(const InstanceInfo& info)
     
     pGraphics->LoadFont("Roboto-Regular", ROBOTO_FN);
     pGraphics->LoadFont("Logo", LOGO_FONT_FN);
-//    auto knobSVG = pGraphics->LoadSVG(BEFACO_TINYKNOB_FN); /* TASK_02 */
+    auto knobSVG = pGraphics->LoadSVG(BEFACO_TINYKNOB_FN); /* TASK_02 */
     auto sliderPotSVG = pGraphics->LoadSVG(BEFACO_SLIDEPOT_FN);
     auto sliderHandleSVG = pGraphics->LoadSVG(BEFACO_SLIDEPOTHANDLE_FN);
 
@@ -56,12 +59,13 @@ GEE_SYNTH::GEE_SYNTH(const InstanceInfo& info)
     const IRECT ampEGLabelsArea = ampEG.GetGridCell(0, 3, 1);
     const IRECT ampEGSlidersArea = ampEG.GetGridCell(1, 3, 1);
     const IRECT ampEGValuesArea = ampEG.GetGridCell(2, 3, 1);
+    const IRECT filterArea = column1.GetPadded(0, 0., 5., 0.).FracRectVertical(0.5, false);
     
     /* ADD CONTROLS */
     
     // Background control, either a fixed color, gradient, svg or bitmap
-    pGraphics->AttachPanelBackground(COLOR_LIGHT_GRAY); /* TASK_01 */
-//    pGraphics->AttachPanelBackground(IPattern::CreateLinearGradient(bounds, EDirection::Vertical, {{COLOR_LIGHT_GRAY, 0.}, {COLOR_DARK_GRAY, 1.}}));
+    //pGraphics->AttachPanelBackground(COLOR_LIGHT_GRAY); /* TASK_01 */
+    pGraphics->AttachPanelBackground(IPattern::CreateLinearGradient(bounds, EDirection::Vertical, {{COLOR_GREEN, 0.}, {COLOR_DARK_GRAY, 1.}}));
      
     // Group controls (background labels)
     pGraphics->AttachControl(new IVGroupControl(controlsArea, " ", 0.f));
@@ -73,6 +77,15 @@ GEE_SYNTH::GEE_SYNTH(const InstanceInfo& info)
     buildDateStr.SetFormatted(100, "%s %s %s, built on %s at %.5s ", versionStr.Get(), GetArchStr(), GetAPIStr(), __DATE__, __TIME__);
     pGraphics->AttachControl(new ITextControl(bounds.GetFromTRHC(300, 20), buildDateStr.Get()));
 
+
+
+    pGraphics->AttachControl(new ITextControl(filterArea.FracRectHorizontal(0.5, false).GetCentredInside(100).GetTranslated(0,-100).GetFromBottom(20.f), "Filter Cutoff"));
+    pGraphics->AttachControl(new ISVGKnobControl(filterArea.FracRectHorizontal(0.5, false).GetCentredInside(75), knobSVG, kParamFilterCutoff));
+    pGraphics->AttachControl(new ICaptionControl(filterArea.FracRectHorizontal(0.5, false).GetCentredInside(100).GetTranslated(0,100).GetFromTop(20.f), kParamFilterCutoff));
+    
+    pGraphics->AttachControl(new ITextControl(filterArea.FracRectHorizontal(0.5, true).GetCentredInside(100).GetTranslated(0,-100).GetFromBottom(20.f), "Filter Resoance"));
+    pGraphics->AttachControl(new ISVGKnobControl(filterArea.FracRectHorizontal(0.5, true).GetCentredInside(75), knobSVG, kParamFilterResonance));
+    pGraphics->AttachControl(new ICaptionControl(filterArea.FracRectHorizontal(0.5, true).GetCentredInside(100).GetTranslated(0,100).GetFromTop(20.f), kParamFilterResonance));
     // Oscillator controls
     
     // Envelope controls
@@ -95,7 +108,9 @@ GEE_SYNTH::GEE_SYNTH(const InstanceInfo& info)
 
     /* TASK_03 -- insert some code here! */
     
-//    pGraphics->AttachControl(new ISVGKnobControl(masterArea.GetCentredInside(100), knobSVG, kParamGain)); /* TASK_02 */
+    pGraphics->AttachControl(new ITextControl(masterArea.GetCentredInside(100).GetTranslated(0,-100).GetFromBottom(20.f), "Volume"));
+    pGraphics->AttachControl(new ISVGKnobControl(masterArea.GetCentredInside(75), knobSVG, kParamGain)); /* TASK_02 */
+    pGraphics->AttachControl(new ICaptionControl(masterArea.GetCentredInside(100).GetTranslated(0,100).GetFromTop(20.f), kParamGain));
     
     // Keyboard
     pGraphics->AttachControl(new IVKeyboardControl(keyboardArea, 36, 64), kCtrlTagKeyboard);
@@ -113,14 +128,16 @@ void GEE_SYNTH::ProcessBlock(sample** inputs, sample** outputs, int nFrames)
   mSynth.ProcessBlock(inputs, outputs, 0, 1, nFrames);
 
   /* TASK_02 */
-  /*
-  const double gain = GetParam(kParamGain)->Value() / 100.; // TASK_04
+  
+  //const double gain = GetParam(kParamGain)->Value() / 100.; // TASK_04
+
+  const double gain = GetParam(kParamGain)->DBToAmp();
  
   for (int s = 0; s < nFrames; s++)
   {
     outputs[0][s] *= gain;
   }
-  */
+  
 
   // copy left hand channel audio to right hand channel
   memcpy(outputs[1], outputs[0], nFrames * sizeof(sample));
@@ -144,6 +161,9 @@ void GEE_SYNTH::OnParamChange(int paramIdx)
   case kParamAmpDecay:   for(auto* voice : mVoices) { voice->mEnv.SetStageTime(ADSREnvelope<sample>::EStage::kDecay,   value); } break;
   case kParamAmpSustain: for(auto* voice : mVoices) { voice->mSustainLevel = value / 100.0; } break;
   case kParamAmpRelease: for(auto* voice : mVoices) { voice->mEnv.SetStageTime(ADSREnvelope<sample>::EStage::kRelease, value); } break;
+  case kParamFilterCutoff: for(auto* voice : mVoices) { voice->mFilter.SetFreqCPS(value); } break;
+  case kParamFilterResonance: for(auto* voice : mVoices) { voice->mFilter.SetQ(value); } break;
+  
   default:
     break;
   }
