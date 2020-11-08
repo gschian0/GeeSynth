@@ -1,10 +1,10 @@
 .DS_Store
 xcuserdata
-MyNewPlugin/.vs
-MyNewPlugin/build-web/*.data
-MyNewPlugin/build-web/imgs*
-MyNewPlugin/build-web/fonts.js
-MyNewPlugin/build-web/svgs.js
-MyNewPlugin/build-web/favicon.ico
+GEE_SYNTH/.vs
+GEE_SYNTH/build-web/*.data
+GEE_SYNTH/build-web/imgs*
+GEE_SYNTH/build-web/fonts.js
+GEE_SYNTH/build-web/svgs.js
+GEE_SYNTH/build-web/favicon.ico
 *.RPP-bak
 
